@@ -33,3 +33,5 @@ cmake_install.cmake
 # OS
 Thumbs.db
 .DS_Store
+build_log*.txt
+release/
