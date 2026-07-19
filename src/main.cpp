@@ -4,6 +4,7 @@
 
 #include "Settings.h"
 #include "HitHandler.h"
+#include "MenuSMF.h"
 
 namespace {
     void InitializeLog()
@@ -56,6 +57,9 @@ SKSEPluginLoad(const SKSE::LoadInterface* a_skse)
     SKSE::Init(a_skse, false);  // false = we own the logger
 
     SKSE::GetMessagingInterface()->RegisterListener(MessageHandler);
+
+    // Register in-game settings menu (no-op if SKSEMenuFramework.dll is absent).
+    SimpleStagger::MenuSMF::Register();
 
     logger::info("SimpleStagger loaded");
 

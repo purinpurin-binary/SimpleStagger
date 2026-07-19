@@ -17,6 +17,7 @@ add_commonlibsse_plugin(${PROJECT_NAME}
         src/HitHandler.cpp
         src/Stagger.cpp
         src/Resistance.cpp
+        src/MenuSMF.cpp
 )
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_23)
@@ -28,7 +29,7 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
     _UNICODE
 )
 target_precompile_headers(${PROJECT_NAME} PRIVATE src/pch.h)
-target_include_directories(${PROJECT_NAME} PRIVATE src)
+target_include_directories(${PROJECT_NAME} PRIVATE src extern)
 
 find_package(SimpleIni CONFIG REQUIRED)
 target_link_libraries(${PROJECT_NAME} PRIVATE SimpleIni::SimpleIni)
