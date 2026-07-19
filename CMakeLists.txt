@@ -10,8 +10,13 @@ if(NOT COMMAND add_commonlibsse_plugin)
 endif()
 
 add_commonlibsse_plugin(${PROJECT_NAME}
-    AUTHOR "YourName"
-    SOURCES src/main.cpp
+    AUTHOR "SimpleStagger"
+    SOURCES
+        src/main.cpp
+        src/Settings.cpp
+        src/HitHandler.cpp
+        src/Stagger.cpp
+        src/Resistance.cpp
 )
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_23)
@@ -24,3 +29,6 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
 )
 target_precompile_headers(${PROJECT_NAME} PRIVATE src/pch.h)
 target_include_directories(${PROJECT_NAME} PRIVATE src)
+
+find_package(SimpleIni CONFIG REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE SimpleIni::SimpleIni)
