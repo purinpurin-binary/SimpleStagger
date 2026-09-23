@@ -2,6 +2,21 @@
 
 namespace SimpleStagger
 {
+    /// Event-thread-safe subset of the stagger gate. It only reads runtime
+    /// actor data through CommonLib's version-aware accessors.
+    [[nodiscard]] bool CanQueueSimpleStagger(
+        const RE::Actor* a_target,
+        const RE::Actor* a_aggressor = nullptr);
+
+    /// Full game-thread state gate used when the queued task runs and
+    /// immediately before graph notification. This intentionally does not
+    /// reject an already-staggering actor so SBS stagger chains keep working.
+    /// Sleeping/waking actors and actors that still occupy furniture are
+    /// rejected so their interaction graph can finish first.
+    [[nodiscard]] bool CanApplySimpleStagger(
+        const RE::Actor* a_target,
+        const RE::Actor* a_aggressor = nullptr);
+
     /// Apply a stagger animation to a_target.
     /// a_aggressor may be nullptr (direction defaults to 0.0 = forward stagger).
     ///

@@ -23,4 +23,33 @@ namespace SimpleStagger
     /// a_magnitude is updated in-place when kReduce is returned.
     ResistResult CheckResistance(RE::Actor* a_target, float& a_magnitude);
 
+    /// Detect the active supported perk overhaul(s) and cache their incoming
+    /// stagger perks. Call once after kDataLoaded, before registering the
+    /// hit-event sink.
+    ///
+    /// Supported environments:
+    ///   - Vanilla Skyrim
+    ///   - Master of One
+    ///   - Vokrii
+    ///   - Ordinator
+    ///
+    /// Every cached form is validated by its winning source plugin and by the
+    /// presence of a ModIncomingStagger entry. A record overridden by an
+    /// unsupported plugin therefore does not grant unrelated stagger resistance.
+    [[nodiscard]] bool InitializeIncomingStaggerPerkSupport();
+
+    /// Return true when a supported incoming-stagger perk blocks this stagger.
+    ///
+    /// Skyrim evaluates the perk entry conditions and produces the final
+    /// incoming-stagger multiplier. SimpleStagger interprets that multiplier
+    /// as the probability that the stagger succeeds:
+    ///   1.0 -> never block
+    ///   0.5 -> block 50% of attempts
+    ///   0.0 -> always block
+    ///
+    /// This must run on the game thread because it calls engine functions.
+    [[nodiscard]] bool ShouldBlockStaggerFromPerks(
+        RE::Actor* a_target,
+        RE::Actor* a_aggressor);
+
 }  // namespace SimpleStagger

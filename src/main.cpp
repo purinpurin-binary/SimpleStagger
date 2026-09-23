@@ -5,6 +5,7 @@
 #include "Settings.h"
 #include "HitHandler.h"
 #include "MenuSMF.h"
+#include "Resistance.h"
 
 namespace {
     void InitializeLog()
@@ -28,14 +29,16 @@ namespace {
 
         case SKSE::MessagingInterface::kPostLoad:
             // Load INI settings as early as possible (forms not needed yet).
-            SimpleStagger::Settings::GetSingleton()->Load();
+            (void) SimpleStagger::Settings::GetSingleton()->Load();
             break;
 
         case SKSE::MessagingInterface::kDataLoaded:
             // All forms are now loaded.
             // 1. Resolve override FormIDs and keyword EditorIDs.
-            SimpleStagger::Settings::GetSingleton()->ResolveOverrides();
-            // 2. Register the TESHitEvent sink.
+            (void) SimpleStagger::Settings::GetSingleton()->ResolveOverrides();
+            // 2. Detect and validate supported incoming-stagger perks.
+            (void) SimpleStagger::InitializeIncomingStaggerPerkSupport();
+            // 3. Register the TESHitEvent sink.
             SimpleStagger::HitHandler::Register();
             break;
 

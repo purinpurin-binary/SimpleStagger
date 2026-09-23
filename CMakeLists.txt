@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(SimpleStagger VERSION 1.0.0 LANGUAGES CXX)
+project(SimpleStagger VERSION 1.4.1 LANGUAGES CXX)
 
 set(BUILD_TESTS OFF CACHE BOOL "" FORCE)
 
@@ -33,3 +33,12 @@ target_include_directories(${PROJECT_NAME} PRIVATE src extern)
 
 find_package(SimpleIni CONFIG REQUIRED)
 target_link_libraries(${PROJECT_NAME} PRIVATE SimpleIni::SimpleIni)
+
+include(CTest)
+if(BUILD_TESTING)
+    add_executable(SimpleStaggerTests tests/ContinuousHitTrackerTests.cpp)
+    target_compile_features(SimpleStaggerTests PRIVATE cxx_std_23)
+    target_compile_options(SimpleStaggerTests PRIVATE /permissive- /EHsc /W4)
+    target_include_directories(SimpleStaggerTests PRIVATE src)
+    add_test(NAME ContinuousHitTrackerTests COMMAND SimpleStaggerTests)
+endif()
