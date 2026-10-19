@@ -35,3 +35,6 @@ Thumbs.db
 .DS_Store
 build_log*.txt
 release/
+
+# Internal notes (not published)
+HANDOVER.md

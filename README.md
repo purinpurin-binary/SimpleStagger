@@ -195,3 +195,14 @@ cmake --build --preset x64-release
 
 Requires MSVC, CMake, vcpkg (`VCPKG_ROOT`) and the
 `lib/commonlibsse-ng` submodule.
+
+## License
+
+SimpleStagger is released under the [MIT License](LICENSE).
+
+Third-party components:
+
+- [CommonLibSSE-NG](https://github.com/alandtse/CommonLibVR) v4.38.0 (git submodule) — MIT License
+- `extern/SKSEMenuFramework/SKSEMenuFramework.h` from
+  [SKSE-Menu-Framework-2-Example](https://github.com/Thiago099/SKSE-Menu-Framework-2-Example) —
+  MIT License, see [extern/SKSEMenuFramework/LICENSE](extern/SKSEMenuFramework/LICENSE)
