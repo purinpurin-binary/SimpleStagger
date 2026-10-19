@@ -138,6 +138,8 @@ namespace SimpleStagger::MenuSMF
             AtomicSliderFloat(
                 "Power Attack Magnitude", settings.powerAttackMagnitude, 0.0f, 2.0f);
             AtomicSliderFloat("Bash Magnitude", settings.bashMagnitude, 0.0f, 2.0f);
+            AtomicSliderFloat(
+                "Ranged Attack Magnitude", settings.rangedAttackMagnitude, 0.0f, 2.0f);
 
             ImGui::SeparatorText("Magic Magnitudes (MinimumSkill)");
             AtomicSliderFloat(

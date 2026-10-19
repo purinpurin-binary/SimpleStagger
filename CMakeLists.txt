@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(SimpleStagger VERSION 1.4.1 LANGUAGES CXX)
+project(SimpleStagger VERSION 1.4.2 LANGUAGES CXX)
 
 set(BUILD_TESTS OFF CACHE BOOL "" FORCE)
 

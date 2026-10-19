@@ -1,4 +1,4 @@
-# SimpleStagger 1.4.1
+# SimpleStagger 1.4.2
 
 SimpleStagger is an SKSE plugin that adds directional stagger to eligible weapon and
 Destruction-magic hits. It supports Skyrim SE 1.5.97 and AE 1.6.x from one
@@ -106,6 +106,11 @@ switch off treats that guarded hit like an ordinary hit.
 
 The v1.3.0 normal-attack key is intentionally spelled
 `NormalAttackMaginitude`. If it is absent, the old `StaggerMagnitude` value is read.
+
+Bow and crossbow hits use `RangedAttackMagnitude`; `NormalAttackMaginitude` and
+`PowerAttackMagnitude` apply to melee only. Bow bashes still use `BashMagnitude`.
+If `RangedAttackMagnitude` is absent, the `NormalAttackMaginitude` value is used,
+so existing INIs keep their previous ranged behavior.
 
 If no ranked magic key exists, old `MagicMagnitude` is treated as the Adept value
 and migrated as follows (clamped to 0.0–2.0): Novice ×0.4, Apprentice ×0.6,

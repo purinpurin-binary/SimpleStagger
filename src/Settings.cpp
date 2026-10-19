@@ -150,6 +150,9 @@ namespace SimpleStagger
         powerAttackMagnitude.store(
             ReadFloat(ini, "Stagger", "PowerAttackMagnitude", kDefaultPowerMagnitude));
         bashMagnitude.store(ReadFloat(ini, "Stagger", "BashMagnitude", kDefaultBashMagnitude));
+        // Older INIs shared the normal-attack value with bows and crossbows.
+        rangedAttackMagnitude.store(ReadFloat(
+            ini, "Stagger", "RangedAttackMagnitude", normalAttackMagnitude.load()));
 
         constexpr std::array rankKeys{
             "NoviceMagicMagnitude",
@@ -211,7 +214,7 @@ namespace SimpleStagger
         if (!fileExisted) {
             success = Save();
             if (success) {
-                logger::info("[SimpleStagger] INI not found - wrote v1.4.1 defaults to {}", kIniPath);
+                logger::info("[SimpleStagger] INI not found - wrote v1.4.2 defaults to {}", kIniPath);
             }
         }
 
@@ -220,6 +223,7 @@ namespace SimpleStagger
             "Concentration={} DragonBreath={} OtherCreature={} PlayerStagger={} NPCsCanStagger={} "
             "PhysicalBlock={} WardBlock={} BlockedBehavior={} BlockedMult={:.2f} "
             "CooldownMs={} MagicCooldownMs={} NormalMag={:.2f} PowerMag={:.2f} BashMag={:.2f} "
+            "RangedMag={:.2f} "
             "MagicMag=[{:.2f},{:.2f},{:.2f},{:.2f},{:.2f}] BreathMag={:.2f} "
             "MassThreshold={:.2f} LargeMode={} LargeMult={:.2f}",
             enableMelee.load(), enableRanged.load(), enableMagic.load(),
@@ -229,6 +233,7 @@ namespace SimpleStagger
             blockedHitBehavior.load(), blockedMultiplier.load(),
             staggerCooldownMs.load(), magicCooldownMs.load(),
             normalAttackMagnitude.load(), powerAttackMagnitude.load(), bashMagnitude.load(),
+            rangedAttackMagnitude.load(),
             noviceMagicMagnitude.load(), apprenticeMagicMagnitude.load(), adeptMagicMagnitude.load(),
             expertMagicMagnitude.load(), masterMagicMagnitude.load(),
             breathAttackMagnitude.load(), massThreshold.load(), largeActorMode.load(),
@@ -291,11 +296,13 @@ namespace SimpleStagger
             "Stagger", "BlockedMultiplier", blockedMultiplier.load(),
             "; Guarded-hit magnitude multiplier when BlockedHitBehavior=1");
         ini.SetDoubleValue("Stagger", "NormalAttackMaginitude", normalAttackMagnitude.load(),
-            "; Base stagger magnitude for normal attacks");
+            "; Base stagger magnitude for normal melee attacks");
         ini.SetDoubleValue("Stagger", "PowerAttackMagnitude", powerAttackMagnitude.load(),
-            "; Stagger magnitude for power attacks");
+            "; Stagger magnitude for melee power attacks");
         ini.SetDoubleValue("Stagger", "BashMagnitude", bashMagnitude.load(),
             "; Stagger magnitude for bashes");
+        ini.SetDoubleValue("Stagger", "RangedAttackMagnitude", rangedAttackMagnitude.load(),
+            "; Stagger magnitude for bow and crossbow hits");
         ini.SetDoubleValue("Stagger", "NoviceMagicMagnitude", noviceMagicMagnitude.load(),
             "; Destruction magic magnitude for MinimumSkill 0-24");
         ini.SetDoubleValue("Stagger", "ApprenticeMagicMagnitude", apprenticeMagicMagnitude.load(),

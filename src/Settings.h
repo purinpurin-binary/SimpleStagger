@@ -49,6 +49,7 @@ namespace SimpleStagger
         std::atomic<float> normalAttackMagnitude{ 0.25f };
         std::atomic<float> powerAttackMagnitude{ 0.40f };
         std::atomic<float> bashMagnitude{ 0.25f };
+        std::atomic<float> rangedAttackMagnitude{ 0.25f };
         std::atomic<float> noviceMagicMagnitude{ 0.10f };
         std::atomic<float> apprenticeMagicMagnitude{ 0.15f };
         std::atomic<float> adeptMagicMagnitude{ 0.25f };

@@ -478,11 +478,16 @@ namespace SimpleStagger
                 }
             }
 
-            magnitude = settings->normalAttackMagnitude.load();
-            if (a_event->flags.any(HitFlag::kPowerAttack)) {
+            // A bow bash is a melee action and keeps the melee magnitude order.
+            const bool bash = a_event->flags.any(HitFlag::kBashAttack);
+            if (ranged && !bash) {
+                magnitude = settings->rangedAttackMagnitude.load();
+            } else if (a_event->flags.any(HitFlag::kPowerAttack)) {
                 magnitude = settings->powerAttackMagnitude.load();
-            } else if (a_event->flags.any(HitFlag::kBashAttack)) {
+            } else if (bash) {
                 magnitude = settings->bashMagnitude.load();
+            } else {
+                magnitude = settings->normalAttackMagnitude.load();
             }
         }
 
