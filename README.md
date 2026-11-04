@@ -5,11 +5,20 @@ Destruction-magic hits. One CommonLibSSE-NG DLL supports Skyrim SE 1.5.97,
 AE 1.6.x and AE 1.7.104. It has no ESP or Papyrus scripts. Skyrim VR is not
 supported.
 
-1.5.0 is a rebuild against a newer CommonLibSSE-NG to add AE 1.7.104 support.
-It also fixes guarded hits from enchanted weapons still causing a stagger; the
-settings are unchanged from 1.4.2. Earlier versions were tested in game
-on SE 1.5.97 and AE 1.6.1170, but 1.5.0 itself has not been tested in game yet on
-any runtime; please report results on the mod page.
+## What's new in 1.5.0
+
+- **AE 1.7.104 support.** CommonLibSSE-NG was updated from 4.38.0 to 15.4.0, so
+  one DLL now loads on SE 1.5.97, AE 1.6.x and AE 1.7.104. The log shows the game
+  runtime on startup.
+- **Enchanted weapon block fix.** Blocking a hit from an enchanted weapon no
+  longer causes a stagger that ignores `BlockedHitBehavior`. This happened with
+  or without mods such as Block Enchantments.
+- **License changed to GPL-3.0-or-later** to match CommonLibSSE-NG. Releases up
+  to 1.4.2 remain MIT. See [License](#license).
+
+INI settings are unchanged from 1.4.2, so existing INIs keep working. 1.5.0 has
+been tested in game on AE 1.6.1170, but not yet on AE 1.7.104 or SE 1.5.97;
+please report results on the mod page.
 
 ## Features
 
@@ -58,6 +67,10 @@ any runtime; please report results on the mod page.
   `BlockedHitBehavior` independently. The default behavior exempts both from
   SimpleStagger; reduced magnitude is available through `BlockedMultiplier`.
   A broken Ward is not treated as a successful guard.
+- An enchanted weapon raises two hit events per swing: the enchantment first,
+  without block data, then the physical hit. Events of one swing that arrive in
+  the same frame are treated as one hit, which counts as guarded if any of them
+  was guarded.
 - Weapon and magic cooldowns are independent. Eligible concentration beams can
   attempt stagger repeatedly while continuously hitting, at the configured
   `MagicCooldownMs` interval. Applied staggers and final resistance/perk rejections
@@ -166,7 +179,9 @@ mode, watching for double reactions and kill-move interruption.
    then absorb eligible magic with a Ward. At the default block settings none
    should trigger `staggerStart`. Test each block-category switch independently,
    test reduced mode, then break the Ward and confirm the penetrating hit is not
-   mistaken for a successful guard.
+   mistaken for a successful guard. Repeat the block test against an enchanted
+   weapon (for example Daedric Sword of Fire, `00028E87`): a blocked swing must
+   not stagger, and an unblocked swing must stagger once.
 5. Compare aimed Destruction spells, staffs and scrolls with cloaks, runes,
    healing, support, summon, illusion, shout and non-Destruction scroll sources.
    Only the first group should trigger SimpleStagger.
