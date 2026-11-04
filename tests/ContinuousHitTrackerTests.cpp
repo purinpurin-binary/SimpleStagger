@@ -23,6 +23,7 @@ namespace
     using SimpleStagger::SpecialMagicCategory;
     using SimpleStagger::SpecialMagicProfile;
     using SimpleStagger::WasSuccessfullyGuarded;
+    using SimpleStagger::WeaponHitCoalescer;
     using namespace std::chrono_literals;
 
     void Require(bool a_condition, const char* a_message)
@@ -250,6 +251,67 @@ int main()
     const auto [cooldownSize, pendingSize] = tracker.Sizes();
     Require(cooldownSize == 0 && pendingSize == 1,
         "repeated pending observations must retain bounded state");
+
+    WeaponHitCoalescer weaponHits;
+    const ContinuousHitKey fireSword{ 0x14, 0x1234, 0x28E87 };
+
+    // Enchanted swing: unguarded enchantment event, then guarded physical hit.
+    auto ticket = weaponHits.Observe(fireSword, false, 0.25f);
+    Require(ticket.has_value(), "the first event of a swing must open a hit");
+    Require(!weaponHits.Observe(fireSword, true, 0.25f),
+        "a second event of the same swing must merge");
+    auto hit = weaponHits.Take(*ticket);
+    Require(hit && hit->guarded,
+        "a guarded event must guard the whole merged swing");
+    Require(weaponHits.Size() == 0, "taking a hit must close it");
+
+    // Unguarded enchanted power attack keeps the strongest magnitude.
+    ticket = weaponHits.Observe(fireSword, false, 0.25f);
+    Require(!weaponHits.Observe(fireSword, false, 0.40f),
+        "the physical event must merge into the enchantment event");
+    hit = weaponHits.Take(*ticket);
+    Require(hit && !hit->guarded && hit->magnitude == 0.40f,
+        "an unguarded merged swing must keep the strongest magnitude");
+
+    // The next swing after the task ran is a separate hit.
+    ticket = weaponHits.Observe(fireSword, false, 0.25f);
+    Require(ticket.has_value(), "a swing after Take must open a new hit");
+    Require(weaponHits.Take(*ticket).has_value(), "the new hit must be taken");
+
+    // Other targets and weapons are independent.
+    const auto firstTicket = weaponHits.Observe(fireSword, false, 0.25f);
+    const auto otherTicket =
+        weaponHits.Observe({ 0x15, 0x1234, 0x28E87 }, true, 0.25f);
+    Require(firstTicket && otherTicket, "different targets must not merge");
+    Require(!weaponHits.Take(*firstTicket)->guarded,
+        "another target's guard must not leak");
+    Require(weaponHits.Take(*otherTicket)->guarded,
+        "each target must keep its own guard");
+
+    // Clear discards pending hits, and a stale ticket takes nothing.
+    ticket = weaponHits.Observe(fireSword, true, 0.25f);
+    weaponHits.Clear();
+    Require(!weaponHits.Take(*ticket), "a cleared hit must not be taken");
+    const auto freshTicket = weaponHits.Observe(fireSword, false, 0.25f);
+    Require(!weaponHits.Take(*ticket),
+        "a stale ticket must not take a newer hit");
+    Require(weaponHits.Take(*freshTicket).has_value(),
+        "the newer hit must still be taken by its own ticket");
+
+    // Cost of one enchanted swing: two Observe calls and one Take.
+    constexpr int kSwings = 1'000'000;
+    const auto benchStart = std::chrono::steady_clock::now();
+    for (int i = 0; i < kSwings; ++i) {
+        const ContinuousHitKey key{ 0x14, 0x1234, static_cast<std::uint32_t>(i) };
+        const auto swing = weaponHits.Observe(key, false, 0.25f);
+        (void) weaponHits.Observe(key, true, 0.25f);
+        (void) weaponHits.Take(*swing);
+    }
+    const auto benchNs = std::chrono::duration_cast<std::chrono::nanoseconds>(
+        std::chrono::steady_clock::now() - benchStart).count();
+    Require(weaponHits.Size() == 0, "the benchmark must leave no pending hits");
+    std::cout << "WeaponHitCoalescer: " << (benchNs / kSwings)
+              << " ns per enchanted swing (2 Observe + 1 Take)\n";
 
     return EXIT_SUCCESS;
 }

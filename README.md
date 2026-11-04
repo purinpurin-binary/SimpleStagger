@@ -1,8 +1,15 @@
-# SimpleStagger 1.4.2
+# SimpleStagger 1.5.0
 
 SimpleStagger is an SKSE plugin that adds directional stagger to eligible weapon and
-Destruction-magic hits. It supports Skyrim SE 1.5.97 and AE 1.6.x from one
-CommonLibSSE-NG DLL. It has no ESP or Papyrus scripts.
+Destruction-magic hits. One CommonLibSSE-NG DLL supports Skyrim SE 1.5.97,
+AE 1.6.x and AE 1.7.104. It has no ESP or Papyrus scripts. Skyrim VR is not
+supported.
+
+1.5.0 is a rebuild against a newer CommonLibSSE-NG to add AE 1.7.104 support.
+It also fixes guarded hits from enchanted weapons still causing a stagger; the
+settings are unchanged from 1.4.2. Earlier versions were tested in game
+on SE 1.5.97 and AE 1.6.1170, but 1.5.0 itself has not been tested in game yet on
+any runtime; please report results on the mod page.
 
 ## Features
 
@@ -78,9 +85,10 @@ behavior with [(SGC) Scriptfree Behavior Staggerlock (SBS)](https://www.nexusmod
 
 ## Requirements and installation
 
-- [SKSE64](https://skse.silverlock.org/)
+- [SKSE64](https://skse.silverlock.org/) (2.3.1 or later on AE 1.7.104)
 - [Address Library for SKSE Plugins](https://www.nexusmods.com/skyrimspecialedition/mods/32444)
-- SKSE Menu Framework is optional.
+  (v13 or later on AE 1.7.104)
+- SKSE Menu Framework is optional (3.14 or later on AE 1.7.104).
 
 Install the archive with MO2/Vortex. It contains:
 
@@ -203,11 +211,16 @@ Requires MSVC, CMake, vcpkg (`VCPKG_ROOT`) and the
 
 ## License
 
-SimpleStagger is released under the [MIT License](LICENSE).
+Copyright (C) 2026 purinpurin-binary
+
+SimpleStagger 1.5.0 and later is released under the
+[GNU General Public License v3.0 or later](LICENSE), because the CommonLibSSE-NG
+version it links is GPL-3.0-or-later. Releases up to 1.4.2 were published under
+the MIT License and remain available under it.
 
 Third-party components:
 
-- [CommonLibSSE-NG](https://github.com/alandtse/CommonLibVR) v4.38.0 (git submodule) — MIT License
+- [CommonLibSSE-NG](https://github.com/alandtse/CommonLibVR) v15.4.0 (git submodule) — GPL-3.0-or-later
 - `extern/SKSEMenuFramework/SKSEMenuFramework.h` from
   [SKSE-Menu-Framework-2-Example](https://github.com/Thiago099/SKSE-Menu-Framework-2-Example) —
   MIT License, see [extern/SKSEMenuFramework/LICENSE](extern/SKSEMenuFramework/LICENSE)

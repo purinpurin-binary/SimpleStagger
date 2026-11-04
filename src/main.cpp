@@ -64,7 +64,8 @@ SKSEPluginLoad(const SKSE::LoadInterface* a_skse)
     // Register in-game settings menu (no-op if SKSEMenuFramework.dll is absent).
     SimpleStagger::MenuSMF::Register();
 
-    logger::info("SimpleStagger loaded");
+    logger::info("SimpleStagger v1.5.0 loaded (game runtime {})",
+        a_skse->RuntimeVersion().string());
 
     return true;
 }

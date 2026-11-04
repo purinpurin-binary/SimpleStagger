@@ -6,6 +6,7 @@
 #pragma warning(push)
 #pragma warning(disable: 4244)
 #pragma warning(disable: 5054)
+#pragma warning(disable: 4099)  // header mixes struct/class for ImGuiTextFilter
 #include "../extern/SKSEMenuFramework/SKSEMenuFramework.h"
 #pragma warning(pop)
 

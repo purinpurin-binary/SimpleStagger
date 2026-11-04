@@ -93,6 +93,31 @@ namespace SimpleStagger
                 static_cast<bool>(a_effect->baseEffect->conditions));
         }
 
+        /// Apply the guarded-hit setting to a magnitude. Returns false when the
+        /// hit must not stagger.
+        [[nodiscard]] bool ApplyGuardedHitBehavior(
+            const Settings& a_settings,
+            bool a_guarded,
+            bool a_isMagic,
+            float& a_magnitude)
+        {
+            const bool applyBlockBehavior = a_isMagic ?
+                a_settings.enableWardBlockBehavior.load() :
+                a_settings.enablePhysicalBlockBehavior.load();
+            switch (GetBlockedHitAction(
+                a_guarded,
+                applyBlockBehavior,
+                a_settings.blockedHitBehavior.load())) {
+            case BlockedHitAction::kReject:
+                return false;
+            case BlockedHitAction::kReduce:
+                a_magnitude *= a_settings.blockedMultiplier.load();
+                return IsPositiveFinite(a_magnitude);
+            default:
+                return true;
+            }
+        }
+
         [[nodiscard]] MagicCastKind GetMagicCastKind(
             RE::MagicSystem::CastingType a_castingType)
         {
@@ -389,6 +414,7 @@ namespace SimpleStagger
     {
         m_cooldowns.clear();
         m_magicHitState.Clear();
+        m_weaponHitCoalescer.Clear();
         logger::debug("[SimpleStagger] Cooldown maps cleared");
     }
 
@@ -498,37 +524,35 @@ namespace SimpleStagger
 
         const bool successfullyGuarded =
             IsSuccessfullyGuardedHit(*a_event, target, cause, isMagic);
-        const bool applyBlockBehavior = isMagic ?
-            settings->enableWardBlockBehavior.load() :
-            settings->enablePhysicalBlockBehavior.load();
-        const auto blockedAction = GetBlockedHitAction(
-            successfullyGuarded,
-            applyBlockBehavior,
-            settings->blockedHitBehavior.load());
-        if (blockedAction == BlockedHitAction::kReject) {
-            return EventResult::kContinue;
-        }
-        if (blockedAction == BlockedHitAction::kReduce) {
-            magnitude *= settings->blockedMultiplier.load();
-            if (!IsPositiveFinite(magnitude)) {
-                return EventResult::kContinue;
-            }
-        }
+        const ContinuousHitKey hitKey{
+            target->GetFormID(),
+            cause->GetFormID(),
+            sourceForm->GetFormID()
+        };
 
         std::optional<MagicHitReservation> magicReservation;
         std::chrono::milliseconds magicCooldown{ 0 };
+        std::optional<WeaponHitTicket> weaponTicket;
         if (isMagic) {
+            if (!ApplyGuardedHitBehavior(
+                    *settings, successfullyGuarded, true, magnitude)) {
+                return EventResult::kContinue;
+            }
+
             const auto cooldown = settings->magicCooldownMs.load();
             magicCooldown = std::chrono::milliseconds(cooldown);
-            const auto now = std::chrono::steady_clock::now();
-            const ContinuousHitKey key{
-                target->GetFormID(),
-                cause->GetFormID(),
-                sourceForm->GetFormID()
-            };
             magicReservation = handler->m_magicHitState.TryReserve(
-                key, now, magicCooldown);
+                hitKey, std::chrono::steady_clock::now(), magicCooldown);
             if (!magicReservation) {
+                return EventResult::kContinue;
+            }
+        } else {
+            // The guard decision waits for the task, because the guarded
+            // physical event of an enchanted weapon arrives after the
+            // unguarded enchantment event of the same swing.
+            weaponTicket = handler->m_weaponHitCoalescer.Observe(
+                hitKey, successfullyGuarded, magnitude);
+            if (!weaponTicket) {
                 return EventResult::kContinue;
             }
         }
@@ -538,7 +562,22 @@ namespace SimpleStagger
 
         SKSE::GetTaskInterface()->AddTask(
             [targetHandle, causeHandle, magnitude, isMagic,
-             magicReservation, magicCooldown]() mutable {
+             magicReservation, magicCooldown, weaponTicket]() mutable {
+                if (weaponTicket) {
+                    // Take first so the pending hit is always closed.
+                    const auto hit = HitHandler::GetSingleton()
+                        ->m_weaponHitCoalescer.Take(*weaponTicket);
+                    if (!hit) {
+                        return;
+                    }
+                    magnitude = hit->magnitude;
+                    if (!ApplyGuardedHitBehavior(
+                            *Settings::GetSingleton(), hit->guarded, false,
+                            magnitude)) {
+                        return;
+                    }
+                }
+
                 auto finishMagic =
                     [&](MagicHitCompletion a_completion) {
                         if (magicReservation) {

@@ -1,6 +1,6 @@
 {
   "name": "simplestagger",
-  "version": "1.4.2",
+  "version": "1.5.0",
   "dependencies": [
     "spdlog",
     "fmt",
@@ -8,6 +8,8 @@
     "directxmath",
     "rapidcsv",
     "xbyak",
-    "simpleini"
+    "simpleini",
+    "nlohmann-json",
+    "toml11"
   ]
 }

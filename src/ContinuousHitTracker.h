@@ -7,6 +7,7 @@
 #include <mutex>
 #include <optional>
 #include <unordered_map>
+#include <vector>
 
 namespace SimpleStagger
 {
@@ -150,6 +151,99 @@ namespace SimpleStagger
         std::unordered_map<std::uint32_t, Clock::time_point> m_targetCooldowns;
         std::unordered_map<std::uint32_t, PendingReservation> m_pendingTargets;
         std::uint64_t m_observations{ 0 };
+        std::uint64_t m_nextToken{ 0 };
+    };
+
+    struct WeaponHitTicket
+    {
+        ContinuousHitKey key{};
+        std::uint64_t token{ 0 };
+    };
+
+    struct CoalescedWeaponHit
+    {
+        bool guarded{ false };
+        float magnitude{ 0.0f };
+    };
+
+    /// One weapon swing can raise several TESHitEvents for the same target,
+    /// attacker and weapon in one frame: an enchanted weapon reports its
+    /// enchantment first, with the weapon as source and no block data, then
+    /// the physical hit. Events observed before the queued main-thread task
+    /// runs are folded into one hit, and any guarded event guards the hit.
+    class WeaponHitCoalescer
+    {
+    public:
+        /// Returns a ticket when this event opens a new hit; the caller queues
+        /// one task for it. Returns nullopt when the event was merged into a
+        /// hit that is still pending.
+        [[nodiscard]] std::optional<WeaponHitTicket> Observe(
+            const ContinuousHitKey& a_key,
+            bool a_guarded,
+            float a_magnitude)
+        {
+            std::scoped_lock lock(m_mutex);
+            if (const auto it = FindPending(a_key); it != m_pending.end()) {
+                it->hit.guarded = it->hit.guarded || a_guarded;
+                it->hit.magnitude = std::max(it->hit.magnitude, a_magnitude);
+                return std::nullopt;
+            }
+
+            ++m_nextToken;
+            if (m_nextToken == 0) {
+                ++m_nextToken;
+            }
+            m_pending.push_back(
+                PendingHit{ a_key, m_nextToken, { a_guarded, a_magnitude } });
+            return WeaponHitTicket{ a_key, m_nextToken };
+        }
+
+        /// Close the hit and return everything merged into it. Returns nullopt
+        /// when the hit was discarded by Clear().
+        [[nodiscard]] std::optional<CoalescedWeaponHit> Take(
+            const WeaponHitTicket& a_ticket)
+        {
+            std::scoped_lock lock(m_mutex);
+            const auto it = FindPending(a_ticket.key);
+            if (it == m_pending.end() || it->token != a_ticket.token) {
+                return std::nullopt;
+            }
+            const auto hit = it->hit;
+            *it = m_pending.back();
+            m_pending.pop_back();
+            return hit;
+        }
+
+        void Clear()
+        {
+            std::scoped_lock lock(m_mutex);
+            m_pending.clear();
+        }
+
+        [[nodiscard]] std::size_t Size() const
+        {
+            std::scoped_lock lock(m_mutex);
+            return m_pending.size();
+        }
+
+    private:
+        struct PendingHit
+        {
+            ContinuousHitKey key{};
+            std::uint64_t token{ 0 };
+            CoalescedWeaponHit hit{};
+        };
+
+        // Only hits queued in the current frame are pending, so a linear scan
+        // over a few entries beats hashing.
+        [[nodiscard]] std::vector<PendingHit>::iterator FindPending(
+            const ContinuousHitKey& a_key)
+        {
+            return std::ranges::find(m_pending, a_key, &PendingHit::key);
+        }
+
+        mutable std::mutex m_mutex;
+        std::vector<PendingHit> m_pending;
         std::uint64_t m_nextToken{ 0 };
     };
 }  // namespace SimpleStagger

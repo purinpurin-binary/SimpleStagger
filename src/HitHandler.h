@@ -40,6 +40,10 @@ namespace SimpleStagger
         // cooldown and pending task reservations.
         MagicHitState m_magicHitState;
 
+        // Folds the enchantment and physical TESHitEvents of one weapon swing
+        // into a single stagger decision.
+        WeaponHitCoalescer m_weaponHitCoalescer;
+
         // FormIDs referenced by load-order-winning Cloak MGEFs. The set is
         // populated before sink registration and then remains immutable.
         std::unordered_set<RE::FormID> m_cloakAssociatedMagic;
